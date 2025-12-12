@@ -29,11 +29,11 @@
         layer1 {
             display-name = "Layer 1";
             bindings = <
-&kp F11   &kp F1       &kp F2      &kp F3  &kp F4  &kp F5  &trans                  &trans  &kp F6       &kp F7               &kp F8               &kp F9  &kp F10      &kp F12
-&trans    &trans       &trans      &trans  &trans  &trans  &trans                  &trans  &trans       &trans               &trans               &trans  &trans       &trans
-&trans    &trans       &trans      &trans  &trans  &trans  &trans                  &trans  &kp C_MUTE   &kp C_VOLUME_DOWN    &kp C_VOLUME_UP      &trans  &trans       &trans
-&trans    &trans       &trans      &trans  &trans  &trans          &trans  &trans          &trans       &kp C_BRIGHTNESS_INC &kp C_BRIGHTNESS_DEC &trans  &kp UP_ARROW &trans
-&trans    &trans       &trans      &trans  &trans          &trans  &trans  &trans  &trans               &trans               &trans               &trans  &trans       &trans
+&kp F11   &kp F1       &kp F2      &kp F3  &kp F4  &kp F5  &trans                  &trans  &kp F6       &kp F7               &kp F8          &kp F9  &kp F10      &kp F12
+&trans    &trans       &trans      &trans  &trans  &trans  &trans                  &trans  &trans       &trans               &trans          &trans  &trans       &trans
+&trans    &trans       &trans      &trans  &trans  &trans  &trans                  &trans  &kp C_MUTE   &kp C_VOLUME_DOWN    &kp C_VOLUME_UP &trans  &trans       &trans /* Note: on macOS PAUSE_BREAK = F14 = brightness down. SLCK = F15 = brightness up. https://github.com/zmkfirmware/zmk/issues/1045 */
+&trans    &trans       &trans      &trans  &trans  &trans          &trans  &trans          &trans       &kp PAUSE_BREAK      &kp SLCK        &trans  &kp UP_ARROW &trans
+&trans    &trans       &trans      &trans  &trans          &trans  &trans  &trans  &trans               &trans               &trans          &trans  &trans       &trans
             >;
         };
     };
