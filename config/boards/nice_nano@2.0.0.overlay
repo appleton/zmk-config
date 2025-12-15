@@ -1,0 +1,2 @@
+/* Board revision-specific overlay to ensure VBATT is enabled for nice_nano@2.0.0 builds. */
+#include "nice_nano.overlay"
