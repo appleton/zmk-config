@@ -1,0 +1,14 @@
+// Battery configuration for nice_nano v1 (if needed as fallback)
+// The nice_nano v1 uses P0.04 (AIN2) with a voltage divider
+
+/ {
+    vbatt: vbatt {
+        compatible = "zmk,battery-nrf-vddh";
+    };
+};
+
+/ {
+    chosen {
+        zmk,battery = &vbatt;
+    };
+};

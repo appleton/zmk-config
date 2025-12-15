@@ -1,0 +1,14 @@
+// Battery configuration for nice_nano v2
+// The nice_nano v2 uses internal VDDH sensing instead of an external voltage divider
+
+/ {
+    vbatt: vbatt {
+        compatible = "zmk,battery-nrf-vddh";
+    };
+};
+
+/ {
+    chosen {
+        zmk,battery = &vbatt;
+    };
+};
