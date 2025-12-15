@@ -1,3 +1,14 @@
+/* Enable the on-board voltage divider and point ZMK at it for battery readings. */
+&adc {
+	status = "okay";
+};
+
 &vbatt {
 	status = "okay";
+};
+
+/ {
+	zephyr,user {
+		io-channels = <&vbatt>;
+	};
 };
