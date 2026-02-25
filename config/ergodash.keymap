@@ -22,8 +22,8 @@
 &kp ESC    &kp N1     &kp N2        &kp N3            &kp N4     &kp N5  &kp MINUS                                   &kp EQUAL          &kp N6  &kp N7     &kp N8             &kp N9    &kp N0          &kp HOME
 &kp TAB    &kp Q      &kp W         &kp E             &kp R      &kp T   &kp LEFT_BRACKET                            &kp RIGHT_BRACKET  &kp Y   &kp U      &kp I              &kp O     &kp P           &kp END
 &kp GRAVE  &kp A      &kp S         &kp D             &lt 2 F    &kp G   &kp BACKSLASH                               &kp ENTER          &kp H   &kp J      &kp K              &kp L     &kp SEMI        &kp SQT
-&kp LSHFT  &kp Z      &kp X         &kp C             &kp V      &kp B                     &kp PG_UP  &trans                            &kp N   &kp M      &kp COMMA          &kp DOT   &kp SLASH       &kp RSHFT
-&mo 1      &kp LCTRL  &kp LEFT_ALT  &kp LEFT_COMMAND  &lt 2 SPACE        &kp PG_DN         &kp SPACE  &kp BACKSPACE  &kp BACKSPACE              &kp SPACE  &kp RIGHT_COMMAND  &kp LEFT  &kp DOWN_ARROW  &kp RIGHT
+&kp LSHFT  &kp Z      &kp X         &kp C             &kp V      &kp B   &kp PG_UP         &trans                                       &kp N   &kp M      &kp COMMA          &kp DOT   &kp SLASH       &kp RSHFT
+&mo 1      &kp LCTRL  &kp LEFT_ALT  &kp LEFT_COMMAND  &kp SPACE          &kp PG_DN         &kp SPACE  &kp BACKSPACE  &kp BACKSPACE              &kp SPACE  &kp RIGHT_COMMAND  &kp LEFT  &kp DOWN_ARROW  &kp RIGHT
             >;
         };
 
