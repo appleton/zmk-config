@@ -19,7 +19,17 @@
 #
 ---
 include:
+  # Dongle (central)
+  - board: nrf52840dongle_nrf52840
+    shield: ergodash_dongle
+  # Settings reset firmware (flash to all devices before first use)
+  - board: nrf52840dongle_nrf52840
+    shield: settings_reset
+  # Left half (peripheral)
   - board: nice_nano@2.0.0
     shield: ergodash_left
+    cmake-args: -DCONFIG_ZMK_SPLIT=y -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=n
+  # Right half (peripheral)
   - board: nice_nano@2.0.0
     shield: ergodash_right
+    cmake-args: -DCONFIG_ZMK_SPLIT=y -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=n
