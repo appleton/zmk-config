@@ -19,7 +19,20 @@
 #
 ---
 include:
+  - board: nrf52840dongle/nrf52840/zmk
+    shield: ergodash_dongle
+    artifact-name: ergodash-dongle-nrf52840
   - board: nice_nano@2.0.0//zmk
     shield: ergodash_left
+    cmake-args: -DCONFIG_ZMK_SPLIT=y -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=n
+    artifact-name: ergodash-left-peripheral-nice-nano-v2
   - board: nice_nano@2.0.0//zmk
     shield: ergodash_right
+    cmake-args: -DCONFIG_ZMK_SPLIT=y -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=n
+    artifact-name: ergodash-right-peripheral-nice-nano-v2
+  - board: nice_nano@2.0.0//zmk
+    shield: settings_reset
+    artifact-name: settings-reset-nice-nano-v2
+  - board: nrf52840dongle/nrf52840/zmk
+    shield: settings_reset
+    artifact-name: settings-reset-nrf52840-dongle
