@@ -32,14 +32,14 @@ struct BatteryWidgetView: View {
                 .accessibilityLabel("\(name) signal")
                 .accessibilityValue(reading?.signalTooltip ?? "Unavailable")
             HStack(spacing: 3) {
+                Text(batteryCurrent ? "\(reading!.percent)%" : "—")
+                    .monospacedDigit()
+                    .foregroundStyle(batteryCurrent ? .primary : .secondary)
                 Image(systemName: reading?.batterySymbol ?? "battery.0percent")
                     .font(.system(size: 16))
                     .symbolRenderingMode(.palette)
                     .foregroundStyle(batteryTint(reading), Color.primary.opacity(0.6))
                     .frame(width: 26, height: 22)
-                Text(batteryCurrent ? "\(reading!.percent)%" : "—")
-                    .monospacedDigit()
-                    .foregroundStyle(batteryCurrent ? .primary : .secondary)
             }
                 .help((reading?.batteryTooltip ?? "Battery unavailable") + timestamp)
                 .accessibilityElement(children: .ignore)

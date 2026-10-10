@@ -74,8 +74,8 @@ card and native gallery widget with a USB collector app. The Mac reads all telem
 no Bluetooth pairing with the Mac is required.
 
 It shows both halves in one table row, with an SF Symbols Wi-Fi indicator to
-the left of each battery icon, and battery percentage immediately beside that
-icon. Signal help text includes an estimated percentage
+the left of the battery percentage, followed by the battery icon.
+Signal help text includes an estimated percentage
 and measured RSSI in dBm; battery help text includes voltage and USB power status.
 Percentages continue
 updating while idle and charging. Left/right identities are set in `build.yaml`,

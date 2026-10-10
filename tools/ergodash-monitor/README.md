@@ -22,8 +22,8 @@ have a system-controlled outer height (164 points here), so the half-height
 card is a companion-app window rather than a gallery widget.
 
 Both views use one table row with two entries: **Left** and **Right**. Each
-entry contains an SF Symbols **wifi** indicator followed by a battery icon
-with the **battery percentage immediately beside it**. The gallery widget
+entry contains an SF Symbols **wifi** indicator, the **battery percentage**,
+then the **battery icon**, in that order from left to right. The gallery widget
 uses SwiftUI's regular material. These are system materials; an exact visual
 match to Apple's private Batteries widget has not been verified. Battery
 icons use the standard percentage symbols and **battery.100percent.bolt**
