@@ -1,0 +1,14 @@
+menuconfig ERGODASH_BATTERY_TELEMETRY
+    bool "ErgoDash battery telemetry over the dongle's USB HID interface"
+    depends on ZMK_SPLIT_BLE && SOC_NRF52840
+    depends on !ZMK_SPLIT_ROLE_CENTRAL || ZMK_USB
+
+if ERGODASH_BATTERY_TELEMETRY
+
+config ERGODASH_BATTERY_SIDE
+    int "Physical half (0 = left, 1 = right)"
+    range 0 1
+    default 0
+    depends on !ZMK_SPLIT_ROLE_CENTRAL
+
+endif

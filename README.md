@@ -66,6 +66,34 @@ sequence, clear the previous file from Programmer, and write only
 `ergodash-dongle-raytac-mdbt50q-cx.hex`. No separate SoftDevice or bootloader
 image is needed for these ZMK builds. See [Raytac's DFU instructions](https://www.raytac.com/news/ins.php?index_id=175).
 
+### USB battery and signal monitor
+
+The firmware includes a separate USB HID interface for
+[ErgoDash USB Monitor](tools/ergodash-monitor/README.md), a small native macOS
+menu bar app. The Mac reads all telemetry over the dongle's USB connection;
+no Bluetooth pairing with the Mac is required.
+
+It shows each half's estimated battery percentage, battery voltage, USB power
+status and signal strength (RSSI) received at the dongle. Percentages continue
+updating while idle and charging. Left/right identities are set in `build.yaml`,
+so they do not depend on pairing order. Both halves and the dongle must run
+the matching monitor firmware. Flash the three **normal** firmware files;
+settings-reset firmware is not needed for this update.
+
+The nice!nano v2 charger's status output is connected to its charge LED, not
+to the processor. The app therefore says **USB powered**, rather than claiming
+that the battery is charging or full. The charge LED indicates actual charging.
+Battery percentages are voltage-based estimates and can read high during
+charging; a 100% estimate does not establish that charging has finished.
+See the [nice!nano schematic](https://nicekeyboards.com/docs/nice-nano/pinout-schematic/).
+
+Build and run the app:
+
+```sh
+sh tools/ergodash-monitor/build.sh
+open "tools/ergodash-monitor/build/ErgoDash USB Monitor.app"
+```
+
 ### Restore the original two-part setup
 
 The previous +8 dBm configuration remains on branch `aa/bluetooth-tx-power`,
