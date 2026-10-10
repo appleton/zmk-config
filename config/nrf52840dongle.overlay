@@ -1,0 +1,17 @@
+/*
+ * Raytac MDBT50Q-CX-40 adaptation for the Nordic dongle board target.
+ * Applied to both ergodash_dongle and settings_reset builds.
+ * Raytac requires both DC/DC stages disabled:
+ * https://www.raytac.com/news/ins.php?index_id=175
+ */
+
+#include <zephyr/dt-bindings/regulator/nrf5x.h>
+
+/* Zephyr 4.1 enables high-voltage DC/DC when reg0 has status "okay". */
+&reg0 {
+    status = "disabled";
+};
+
+&reg1 {
+    regulator-initial-mode = <NRF5X_REG_MODE_LDO>;
+};
