@@ -69,16 +69,24 @@ image is needed for these ZMK builds. See [Raytac's DFU instructions](https://ww
 ### USB battery and signal monitor
 
 The firmware includes a separate USB HID interface for
-[ErgoDash USB Monitor](tools/ergodash-monitor/README.md), a small native macOS
-menu bar app. The Mac reads all telemetry over the dongle's USB connection;
+[ErgoDash USB Monitor](tools/ergodash-monitor/README.md), a compact macOS desktop
+card and native gallery widget with a USB collector app. The Mac reads all telemetry over the dongle's USB connection;
 no Bluetooth pairing with the Mac is required.
 
-It shows each half's estimated battery percentage, battery voltage, USB power
-status and signal strength (RSSI) received at the dongle. Percentages continue
+It shows both halves in one table row, with an SF Symbols Wi-Fi indicator to
+the left of each battery icon, and battery percentage immediately beside that
+icon. Signal help text includes an estimated percentage
+and measured RSSI in dBm; battery help text includes voltage and USB power status.
+Percentages continue
 updating while idle and charging. Left/right identities are set in `build.yaml`,
 so they do not depend on pairing order. Both halves and the dongle must run
 the matching monitor firmware. Flash the three **normal** firmware files;
 settings-reset firmware is not needed for this update.
+
+The earlier USB monitor firmware used an unsupported sensor channel and showed
+no battery values despite working RSSI. Firmware `ded62ca` fixes this: existing
+monitor users need to reflash **only both halves**, with no dongle update or
+settings reset.
 
 The nice!nano v2 charger's status output is connected to its charge LED, not
 to the processor. The app therefore says **USB powered**, rather than claiming
@@ -93,6 +101,13 @@ Build and run the app:
 sh tools/ergodash-monitor/build.sh
 open "tools/ergodash-monitor/build/ErgoDash USB Monitor.app"
 ```
+
+Open the app once for a draggable, live **344 × 82 point** desktop card with a
+system blur material. A native **ErgoDash Batteries** gallery widget is also
+available from **Edit Widgets** on the desktop or in Notification Center; its
+outer height is controlled by macOS and cannot be halved. Close the collector's window to leave it
+running in the background. macOS controls widget refresh timing, so widget
+readings can lag behind USB readings. The collector's own view updates live.
 
 ### Restore the original two-part setup
 

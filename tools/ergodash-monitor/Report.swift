@@ -30,6 +30,35 @@ struct HalfReading {
     var signal: String {
         signalCurrent ? "\(rssi) dBm" : "Unavailable or stale"
     }
+
+    // Display estimate: -100 dBm = 0%, -50 dBm = 100%, clamped.
+    var signalPercent: Int? {
+        signalCurrent ? min(100, max(0, 2 * (Int(rssi) + 100))) : nil
+    }
+
+    var signalTooltip: String {
+        guard let percent = signalPercent else { return "Signal unavailable or stale" }
+        return "Signal: \(percent)% (\(rssi) dBm) · RSSI estimate"
+    }
+
+    var batterySymbol: String {
+        guard current else { return "battery.0percent" }
+        if usbPowered { return "battery.100percent.bolt" }
+        switch percent {
+        case 0..<13: return "battery.0percent"
+        case 13..<38: return "battery.25percent"
+        case 38..<63: return "battery.50percent"
+        case 63..<88: return "battery.75percent"
+        default: return "battery.100percent"
+        }
+    }
+
+    var batteryTooltip: String {
+        if !connected { return "Disconnected" }
+        if !current { return "Battery reading unavailable or stale" }
+        return "\(percent)% · \(String(format: "%.2f", Double(millivolts) / 1000)) V" +
+            (usbPowered ? " · USB powered; active charging cannot be detected" : " · On battery")
+    }
 }
 
 struct BatteryReport {
@@ -74,6 +103,10 @@ func runReportTests() {
     check(report.halves[1].compact == "62%", "Battery-powered right percentage")
     check(report.halves[0].rssi == -50 && report.halves[1].rssi == -71, "Signed RSSI")
     check(report.halves[0].millivolts == 4042, "Little-endian voltage")
+    check(report.halves[0].signalPercent == 100 && report.halves[1].signalPercent == 58, "RSSI display scale")
+    check(report.halves[0].signalTooltip.contains("-50 dBm"), "Measured signal in tooltip")
+    check(report.halves[0].batterySymbol == "battery.100percent.bolt", "USB power bolt")
+    check(report.halves[0].batteryTooltip.contains("cannot be detected"), "No false charging claim")
     check(BatteryReport(Array(bytes.dropFirst())) != nil, "Separately supplied report ID")
     check(BatteryReport(Array(bytes.dropFirst()), reportID: 2) == nil, "Wrong report ID")
     check(BatteryReport(Array(bytes.dropLast())) == nil, "Truncated packet")
@@ -94,6 +127,10 @@ func runReportTests() {
     check(!BatteryReport(changed)!.halves[0].signalCurrent, "Old RSSI is stale")
     changed = bytes; changed[8] = 127
     check(!BatteryReport(changed)!.halves[0].signalCurrent, "Unavailable controller RSSI")
+    changed = bytes; changed[8] = UInt8(bitPattern: -110)
+    check(BatteryReport(changed)!.halves[0].signalPercent == 0, "Weak RSSI clamps to zero")
+    changed = bytes; changed[8] = UInt8(bitPattern: -30)
+    check(BatteryReport(changed)!.halves[0].signalPercent == 100, "Strong RSSI clamps to 100")
     changed = bytes; changed[2] = 4; changed[3] = 255
     check(!BatteryReport(changed)!.halves[0].valid, "No sample yet")
     print("Battery report tests passed")
