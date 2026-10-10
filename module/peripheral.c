@@ -9,6 +9,7 @@
 #include <zmk/workqueue.h>
 
 #include "protocol.h"
+#include "battery_sensor.h"
 
 static const struct device *const battery = DEVICE_DT_GET(DT_CHOSEN(zmk_battery));
 static struct bt_uuid_128 service_uuid = BT_UUID_INIT_128(ERGODASH_SERVICE_UUID);
@@ -20,16 +21,8 @@ static uint8_t snapshot[BATTERY_GATT_SIZE] = {
 static int64_t sampled_at;
 
 static void sample_battery(struct k_work *work) {
-    struct sensor_value voltage;
     uint16_t mv = 0;
-    bool valid = device_is_ready(battery) &&
-                 sensor_sample_fetch_chan(battery, SENSOR_CHAN_VOLTAGE) == 0 &&
-                 sensor_channel_get(battery, SENSOR_CHAN_VOLTAGE, &voltage) == 0;
-    if (valid) {
-        int32_t reading = voltage.val1 * 1000 + voltage.val2 / 1000;
-        valid = reading >= 0 && reading <= UINT16_MAX;
-        mv = valid ? reading : 0;
-    }
+    bool valid = battery_sensor_read_mv(battery, &mv) == 0;
     k_spinlock_key_t key = k_spin_lock(&snapshot_lock);
     snapshot[2] = valid ? BATTERY_VALID : 0;
     snapshot[3] = valid ? battery_percent(mv) : BATTERY_UNKNOWN;

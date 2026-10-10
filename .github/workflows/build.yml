@@ -2,6 +2,16 @@ name: Build ZMK firmware
 on: [push, pull_request, workflow_dispatch]
 
 jobs:
+  telemetry-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test telemetry protocol and battery driver contract
+        run: |
+          cc -Wall -Wextra -Werror tests/protocol_test.c -o /tmp/protocol-test
+          /tmp/protocol-test
+          cc -Wall -Wextra -Werror -I tests/stubs tests/battery_sensor_test.c -o /tmp/battery-sensor-test
+          /tmp/battery-sensor-test
   build:
     uses: zmkfirmware/zmk/.github/workflows/build-user-config.yml@main
     with:
