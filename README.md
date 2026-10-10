@@ -108,7 +108,8 @@ app can be closed afterward: a per-user LaunchAgent collects USB telemetry,
 starts automatically at login after boot, and restarts if it exits. It has no
 window, Dock icon, menu bar item or separate desktop card. Native widget sizes
 and refresh timing are controlled by macOS; the medium sidebar widget's outer
-height cannot be halved. Its background uses a native glass effect on macOS 26+.
+height cannot be halved. Its background requests the same host blur style as Apple's Batteries widget
+using an internal WidgetKit API; see the monitor README for compatibility details.
 
 ### Restore the original two-part setup
 

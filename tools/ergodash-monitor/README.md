@@ -26,10 +26,20 @@ For scripted setup, the executable also accepts `--install-service` and
 `--uninstall-service`. Collector errors go to `~/Library/Logs/ErgoDashUSB/collector.log`.
 
 Both halves appear in one row. Each entry reads from left to right:
-**Wi-Fi icon → battery percentage → battery icon**. The widget uses a clear
-native SwiftUI glass effect on macOS 26+, with a thin material fallback on older
-versions, inside a removable WidgetKit background. There is no opaque white
-fill. macOS also controls widget appearance through the user's widget style.
+**Wi-Fi icon → battery percentage → battery icon**. Version 3.1 requests the same **host blur background** as Apple's Batteries
+widget through WidgetKit's internal `preferredBackgroundStyle(.blur)` API,
+with a transparent content background and white text/icons. Drawing a glass
+view inside the normal container does not remove the host's opaque white fill.
+This does not change any global appearance settings.
+
+`prepare-background-api.py` exposes that declaration in a build-local copy of
+the installed SDK's Swift interface. The API and blur enum case are exported
+by the installed WidgetKit framework and SDK linker stub, and imported by
+Apple's Batteries extension. No installed SDK files are edited. This is a local
+build using an internal API, not suitable for App Store distribution, and may
+need adjustment after macOS updates. The current Mac has accepted the blur
+preference and generated a fresh widget timeline.
+
 Native sidebar widget dimensions are fixed by WidgetKit; a medium widget's
 outer height cannot be halved. The row stays vertically centered.
 
@@ -37,7 +47,8 @@ Signal help shows an estimated percentage and measured RSSI in dBm, plus the
 snapshot time. The estimate is `clamp(2 × (RSSI + 100), 0, 100)`; -100 dBm
 maps to 0%, -50 dBm to 100%. It does not measure packet loss, interference,
 latency or radio transmit power. Battery help includes voltage and USB power.
-The help text is archived by WidgetKit; visible hover behavior depends on its host.
+The help text is archived for accessibility. Notification Center has not shown
+hover tooltips in this build; these are no longer promised in the setup UI.
 
 The battery bolt means **USB power detected on that half**. nice!nano v2 does
 not expose the charger's status to the MCU, so active charging or charge
@@ -99,8 +110,8 @@ register the updated installed extension, and reinstall the background service.
 The installed widget has been verified to generate a new native timeline, and
 the LaunchAgent to publish real USB telemetry and restart after termination.
 Actual battery values still require the corrected firmware on both halves.
-The Mac's display was unavailable during the latest UI check, so the final
-sidebar glass appearance and setup-window lifecycle still need visual verification.
+The final on-screen background comparison still needs verification; the host
+blur preference and refreshed timeline have been confirmed in macOS logs.
 
 Hardware checks after flashing: confirm separate percentages/voltage, connect
 USB power to just one half and check its bolt, check updates while idle, move

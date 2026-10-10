@@ -53,7 +53,7 @@ struct SetupWindow: View {
                 .font(.callout).fixedSize(horizontal: false, vertical: true)
             Text("Open Notification Center, choose Edit Widgets, search for ErgoDash, and add the medium ErgoDash Batteries widget. macOS controls its size and refresh timing.")
                 .font(.callout).fixedSize(horizontal: false, vertical: true)
-            Text("The bolt means USB powered; the keyboard cannot report active charging. Battery percentage is estimated from voltage. Hover Wi-Fi for signal percentage and dBm.")
+            Text("The bolt means USB powered; the keyboard cannot report active charging. Battery percentage is estimated from voltage, and signal strength from RSSI.")
                 .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             HStack {
                 Button("Refresh widget") { WidgetCenter.shared.reloadTimelines(ofKind: WidgetConstants.kind) }

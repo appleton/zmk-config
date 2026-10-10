@@ -30,18 +30,16 @@ struct BatteryProvider: TimelineProvider {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: WidgetConstants.kind, provider: BatteryProvider()) { entry in
             BatteryWidgetView(report: entry.report, sampledAt: entry.receivedAt)
-                .containerBackground(for: .widget) {
-                    if #available(macOS 26.0, *) {
-                        Color.clear.glassEffect(.clear, in: ContainerRelativeShape())
-                    } else {
-                        Color.clear.background(.ultraThinMaterial)
-                    }
-                }
+                .environment(\.colorScheme, .dark)
+                .containerBackground(for: .widget) { Color.clear }
                 .widgetURL(URL(string: "ergodash-monitor://show"))
         }
         .configurationDisplayName("ErgoDash Batteries")
         .description("Left and right keyboard battery levels and signal strength over USB.")
         .supportedFamilies([.systemMedium])
         .containerBackgroundRemovable(true)
+        // Match the host backdrop used by Apple's Batteries widget. A glass
+        // view inside containerBackground leaves the host's opaque fill intact.
+        .preferredBackgroundStyle(.blur)
     }
 }
