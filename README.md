@@ -69,8 +69,8 @@ image is needed for these ZMK builds. See [Raytac's DFU instructions](https://ww
 ### USB battery and signal monitor
 
 The firmware includes a separate USB HID interface for
-[ErgoDash USB Monitor](tools/ergodash-monitor/README.md), a compact macOS desktop
-card and native gallery widget with a USB collector app. The Mac reads all telemetry over the dongle's USB connection;
+[ErgoDash USB Monitor](tools/ergodash-monitor/README.md), a native Notification Center
+widget with a setup app and automatic background USB collector. The Mac reads all telemetry over the dongle's USB connection;
 no Bluetooth pairing with the Mac is required.
 
 It shows both halves in one table row, with an SF Symbols Wi-Fi indicator to
@@ -102,12 +102,13 @@ sh tools/ergodash-monitor/build.sh
 open "tools/ergodash-monitor/build/ErgoDash USB Monitor.app"
 ```
 
-Open the app once for a draggable, live **344 × 82 point** desktop card with a
-system blur material. A native **ErgoDash Batteries** gallery widget is also
-available from **Edit Widgets** on the desktop or in Notification Center; its
-outer height is controlled by macOS and cannot be halved. Close the collector's window to leave it
-running in the background. macOS controls widget refresh timing, so widget
-readings can lag behind USB readings. The collector's own view updates live.
+Open the app from Applications and install its background service, then add
+**ErgoDash Batteries** from **Edit Widgets** in Notification Center. The setup
+app can be closed afterward: a per-user LaunchAgent collects USB telemetry,
+starts automatically at login after boot, and restarts if it exits. It has no
+window, Dock icon, menu bar item or separate desktop card. Native widget sizes
+and refresh timing are controlled by macOS; the medium sidebar widget's outer
+height cannot be halved. Its background uses a native glass effect on macOS 26+.
 
 ### Restore the original two-part setup
 

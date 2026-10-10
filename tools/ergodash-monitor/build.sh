@@ -6,7 +6,7 @@ mkdir -p "$app/Contents/MacOS" build/module-cache
 arch=$(uname -m)
 swiftc -O -target "$arch-apple-macos14.0" -module-cache-path build/module-cache \
     -framework AppKit -framework IOKit -framework SwiftUI -framework WidgetKit \
-    Report.swift WidgetSnapshot.swift BatteryWidgetView.swift DesktopWidget.swift main.swift \
+    Report.swift WidgetSnapshot.swift BatteryWidgetView.swift BackgroundService.swift USBCollector.swift main.swift \
     -o "$app/Contents/MacOS/ErgoDash USB Monitor"
 extension="$app/Contents/PlugIns/ErgoDashWidget.appex"
 mkdir -p "$extension/Contents/MacOS"
@@ -26,8 +26,8 @@ cat > "$extension/Contents/Info.plist" <<'PLIST'
   <key>CFBundleName</key><string>ErgoDash Batteries</string>
   <key>CFBundleDisplayName</key><string>ErgoDash Batteries</string>
   <key>CFBundlePackageType</key><string>XPC!</string>
-  <key>CFBundleShortVersionString</key><string>2.2</string>
-  <key>CFBundleVersion</key><string>5</string>
+  <key>CFBundleShortVersionString</key><string>3.0</string>
+  <key>CFBundleVersion</key><string>6</string>
   <key>LSMinimumSystemVersion</key><string>14.0</string>
   <key>NSExtension</key><dict>
     <key>NSExtensionPointIdentifier</key><string>com.apple.widgetkit-extension</string>
@@ -48,8 +48,8 @@ cat > "$app/Contents/Info.plist" <<'PLIST'
   <key>CFBundleIdentifier</key><string>dev.andy.ergodash-usb-monitor</string>
   <key>CFBundleName</key><string>ErgoDash USB Monitor</string>
   <key>CFBundlePackageType</key><string>APPL</string>
-  <key>CFBundleShortVersionString</key><string>2.2</string>
-  <key>CFBundleVersion</key><string>5</string>
+  <key>CFBundleShortVersionString</key><string>3.0</string>
+  <key>CFBundleVersion</key><string>6</string>
   <key>LSMinimumSystemVersion</key><string>14.0</string>
   <key>CFBundleURLTypes</key><array><dict>
     <key>CFBundleURLName</key><string>ErgoDash Monitor</string>

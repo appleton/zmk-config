@@ -30,11 +30,18 @@ struct BatteryProvider: TimelineProvider {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: WidgetConstants.kind, provider: BatteryProvider()) { entry in
             BatteryWidgetView(report: entry.report, sampledAt: entry.receivedAt)
-                .containerBackground(.regularMaterial, for: .widget)
+                .containerBackground(for: .widget) {
+                    if #available(macOS 26.0, *) {
+                        Color.clear.glassEffect(.clear, in: ContainerRelativeShape())
+                    } else {
+                        Color.clear.background(.ultraThinMaterial)
+                    }
+                }
                 .widgetURL(URL(string: "ergodash-monitor://show"))
         }
         .configurationDisplayName("ErgoDash Batteries")
         .description("Left and right keyboard battery levels and signal strength over USB.")
         .supportedFamilies([.systemMedium])
+        .containerBackgroundRemovable(true)
     }
 }
