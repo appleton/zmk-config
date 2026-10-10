@@ -11,6 +11,9 @@
 
 #include "protocol.h"
 
+BUILD_ASSERT(BATTERY_HID_SIZE <= CONFIG_HID_INTERRUPT_EP_MPS,
+             "The USB telemetry report must fit in one interrupt packet");
+
 static struct bt_uuid_128 value_uuid = BT_UUID_INIT_128(ERGODASH_VALUE_UUID);
 static const struct device *hid;
 static struct k_spinlock state_lock;
@@ -90,7 +93,7 @@ static int get_report(const struct device *dev, struct usb_setup_packet *setup, 
     }
     make_report(report);
     *data = report;
-    *len = MIN(*len, sizeof(report));
+    *len = MIN(setup->wLength, sizeof(report));
     return 0;
 }
 
