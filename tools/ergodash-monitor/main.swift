@@ -5,6 +5,7 @@ import WidgetKit
 final class SetupModel: ObservableObject {
     @Published var report: BatteryReport?
     @Published var receivedAt: Date?
+    @Published var devices: [SystemBatteryReading] = []
     @Published var installed = BackgroundService.installed
     @Published var message = ""
     @Published var error: String?
@@ -13,6 +14,7 @@ final class SetupModel: ObservableObject {
         let snapshot = SnapshotStore.load(forExtension: false)
         report = snapshot?.freshReport()
         receivedAt = snapshot?.receivedAt
+        devices = snapshot?.systemBatteries?.freshDevices() ?? []
         installed = BackgroundService.installed
         if !installed { message = "Install the background service to collect readings automatically." }
         else if let report = report {
@@ -44,6 +46,10 @@ struct SetupWindow: View {
                 .fixedSize(horizontal: false, vertical: true)
             BatteryWidgetView(report: model.report, sampledAt: model.receivedAt)
                 .frame(height: 50)
+            if !model.devices.isEmpty {
+                Text(model.devices.map { "\($0.name): \($0.percent)%\($0.charging ? " (charging)" : "")" }.joined(separator: "\n"))
+                    .font(.callout).fixedSize(horizontal: false, vertical: true)
+            }
             Text(model.error ?? model.message)
                 .font(.callout).foregroundStyle(model.error == nil ? Color.secondary : Color.red)
                 .fixedSize(horizontal: false, vertical: true)
@@ -51,9 +57,9 @@ struct SetupWindow: View {
                 .buttonStyle(.borderedProminent)
             Text("The service starts at login and restarts automatically if it exits. It has no window, Dock icon or menu bar item. You can close this setup app once installed.")
                 .font(.callout).fixedSize(horizontal: false, vertical: true)
-            Text("Open Notification Center, choose Edit Widgets, search for ErgoDash, and add the medium ErgoDash Batteries widget. macOS controls its size and refresh timing.")
+            Text("Open Notification Center, choose Edit Widgets, search for ErgoDash, and add ErgoDash Batteries. Choose Large for the native Batteries table size. New accessories appear automatically when macOS reports their battery. macOS controls refresh timing.")
                 .font(.callout).fixedSize(horizontal: false, vertical: true)
-            Text("The bolt means USB powered; the keyboard cannot report active charging. Battery percentage is estimated from voltage, and signal strength from RSSI.")
+            Text("The keyboard’s bolt means USB powered; those halves cannot report active charging. Other devices use macOS’s charging status. Keyboard percentage is estimated from voltage, and signal strength from RSSI.")
                 .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             HStack {
                 Button("Refresh widget") { WidgetCenter.shared.reloadTimelines(ofKind: WidgetConstants.kind) }
@@ -109,10 +115,13 @@ final class Setup: NSObject, NSApplicationDelegate {
 }
 
 @MainActor func renderPreview(to path: String) throws {
+    let inventory = ReadSystemBatteries().flatMap { try? JSONDecoder().decode(SystemBatteryInventory.self, from: $0) }
     let renderer = ImageRenderer(content:
-        BatteryWidgetView(report: BatteryReport(BatteryReport.demoBytes))
-            .padding(16).frame(width: 344, height: 164)
-            .environment(\.colorScheme, .light))
+        CombinedBatteryWidgetView(report: BatteryReport(BatteryReport.demoBytes), sampledAt: nil,
+                                  devices: inventory?.validDevices ?? [.demo])
+            .frame(width: 344, height: 344)
+            .environment(\.colorScheme, .dark)
+            .background(Color.gray))
     renderer.scale = 2
     guard let image = renderer.nsImage, let tiff = image.tiffRepresentation,
           let bitmap = NSBitmapImageRep(data: tiff), let png = bitmap.representation(using: .png, properties: [:]) else {
@@ -124,6 +133,15 @@ final class Setup: NSObject, NSApplicationDelegate {
 if CommandLine.arguments.contains("--self-test") {
     runReportTests()
     runSnapshotTests()
+    runSystemBatteryTests()
+} else if CommandLine.arguments.contains("--system-batteries") {
+    guard let data = ReadSystemBatteries(), let inventory = try? JSONDecoder().decode(SystemBatteryInventory.self, from: data) else {
+        throw NSError(domain: "SystemBatteries", code: 1)
+    }
+    print("Apple icon selection: \(inventory.nativeIcons)")
+    for device in inventory.validDevices {
+        print("\(device.name): \(device.percent)% · charging=\(device.charging) · glyph=\(device.glyph)")
+    }
 } else if CommandLine.arguments.contains("--install-service") {
     try BackgroundService.install()
     print("Background service installed for login")

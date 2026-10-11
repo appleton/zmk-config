@@ -1,17 +1,32 @@
 # ErgoDash USB Monitor
 
 A native **Notification Center widget** with a one-time setup app and a
-background USB collector. It has no separate desktop card or menu bar item.
+background collector. Version 4 also includes the Mac and connected accessories
+that macOS exposes to its Batteries widget. It has no separate desktop card
+or menu bar item.
 Build with Apple's developer tools on macOS 14+:
 
 ```sh
 sh tools/ergodash-monitor/build.sh
 ```
 
+For the native discovery integration test, run outside a development sandbox:
+
+```sh
+clang -fobjc-arc -Wall -Wextra -Werror -framework Foundation -framework AppKit -framework IOKit \
+  tools/ergodash-monitor/tests/SystemBatteriesTests.m -o /tmp/ergodash-native-battery-test
+/tmp/ergodash-native-battery-test
+```
+
+It feeds Apple's parser twelve synthetic, previously unseen Bluetooth products
+in memory, checks device discovery, actual charge values, native icon selection
+and removal, and never registers fake devices with macOS or changes connections.
+
 Copy `build/ErgoDash USB Monitor.app` from this directory to `/Applications`,
 open it and choose **Install background service**. Open Notification Center,
-choose **Edit Widgets**, search for **ErgoDash**, and add the medium
-**ErgoDash Batteries** widget. Existing widgets receive the updated layout.
+choose **Edit Widgets**, search for **ErgoDash**, and add
+**ErgoDash Batteries**. Choose **Large** for the native Batteries table size;
+Medium is a compact table. Existing widgets receive the updated layout.
 After installation, close or quit the setup app; collection continues.
 Open it again to refresh the widget, reinstall or uninstall the service.
 
@@ -25,7 +40,11 @@ Applications because the service and widget extension use that installed path.
 For scripted setup, the executable also accepts `--install-service` and
 `--uninstall-service`. Collector errors go to `~/Library/Logs/ErgoDashUSB/collector.log`.
 
-Both halves appear in one row. Each entry reads from left to right:
+The table uses the native Batteries row spacing, inset separators, white
+labels and device icons. The keyboard halves occupy one additional row.
+Large normally has six rows, Medium three; when more devices are connected,
+rows become more compact instead of silently dropping devices.
+Each keyboard entry reads from left to right:
 **Wi-Fi icon → battery percentage → battery icon**. Version 3.1 requests the same **host blur background** as Apple's Batteries
 widget through WidgetKit's internal `preferredBackgroundStyle(.blur)` API,
 with a transparent content background and white text/icons. Drawing a glass
@@ -41,7 +60,45 @@ need adjustment after macOS updates. The current Mac has accepted the blur
 preference and generated a fresh widget timeline.
 
 Native sidebar widget dimensions are fixed by WidgetKit; a medium widget's
-outer height cannot be halved. The row stays vertically centered.
+outer height cannot be halved.
+
+## Mac and accessory batteries
+
+`SystemBatteries.m` queries `IOPSCopyPowerSourcesByType(0)` for all current
+power sources every five seconds. It passes that data to BatteryCenter's
+`_orderedDevicesFromPowerSourcesBlob:powerSourcesList:` for Apple's names,
+grouping, filtering and ordering, and BatteryCenterUI's
+`batteryWidgetGlyphName:` for Apple's current device icons. There is no
+device-name or product-ID whitelist, and no cached list of today's devices.
+Connecting, disconnecting, changing names, changing charge or changing power
+state updates the inventory and requests a WidgetKit reload.
+
+`Image(_internalSystemName:)` renders the returned symbols, including Apple's
+internal device symbols. Framework image assets are retained when provided.
+Real MacBook, AirPods Pro and case glyphs have been read and rendered, and an
+internal symbol unavailable through the public NSImage initializer has been
+rendered too. This uses OS-supplied glyphs rather than bundled icon copies.
+
+Devices need to report battery information to macOS, as they do for Apple's
+widget. The collector does not scan, pair or connect Bluetooth devices.
+Accessory charging and low-power states come from macOS; the USB-powered
+keyboard bolt retains the hardware limitation described below. Accessory
+batteries remain available when the keyboard dongle is disconnected.
+
+Apple's complete rendering view reads the precise battery service, which
+requires an Apple-only entitlement; an ad-hoc app cannot obtain that access.
+This app uses the normal power-source data and native ordering/icon functions
+instead. It requests no private battery entitlement and changes no system
+framework. These private functions can change after a macOS update. If their
+interfaces become unavailable, the collector falls back to actual OS battery
+data with generic icons; exact icon matching then needs an adapter update.
+
+The combined table has been rendered for layout checks and its installed
+timeline accepted by WidgetKit. Computer use could not access Notification
+Center for the final on-screen glass comparison or switch its existing Medium
+instance to Large. The Apple widget has not been removed.
+
+## Keyboard readings
 
 Signal help contains an estimated percentage and measured RSSI in dBm.
 The estimate is `clamp(2 × (RSSI + 100), 0, 100)`; -100 dBm

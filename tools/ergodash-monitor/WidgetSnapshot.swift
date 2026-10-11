@@ -9,11 +9,13 @@ struct WidgetSnapshot: Codable {
     let version: Int
     let bytes: [UInt8]
     let receivedAt: Date
+    var systemBatteries: SystemBatterySnapshot? = nil
 
-    init(bytes: [UInt8], receivedAt: Date = Date()) {
+    init(bytes: [UInt8], receivedAt: Date = Date(), systemBatteries: SystemBatterySnapshot? = nil) {
         self.version = 1
         self.bytes = bytes.count == 19 ? [1] + bytes : bytes
         self.receivedAt = receivedAt
+        self.systemBatteries = systemBatteries
     }
 
     var report: BatteryReport? { version == 1 ? BatteryReport(bytes) : nil }
@@ -62,7 +64,7 @@ enum SnapshotStore {
     }
 
     static func load(forExtension: Bool) -> WidgetSnapshot? {
-        guard let data = try? Data(contentsOf: url(forExtension: forExtension)), data.count < 4096,
+        guard let data = try? Data(contentsOf: url(forExtension: forExtension)), data.count < 1_048_576,
               let snapshot = try? JSONDecoder().decode(WidgetSnapshot.self, from: data),
               snapshot.report != nil else { return nil }
         return snapshot
@@ -80,5 +82,12 @@ func runSnapshotTests() {
     let malformed = WidgetSnapshot(bytes: [1, 2], receivedAt: time)
     precondition(malformed.report == nil && malformed.freshReport(at: time) == nil)
     precondition(WidgetSnapshot.disconnected.report?.halves[0].compact == "—")
+    let inventory = SystemBatteryInventory(devices: [.demo], nativeIcons: true)
+    let combined = WidgetSnapshot(bytes: snapshot.bytes, receivedAt: time,
+        systemBatteries: SystemBatterySnapshot(inventory: inventory, receivedAt: time.addingTimeInterval(12)))
+    precondition(combined.freshReport(at: time.addingTimeInterval(12)) == nil)
+    precondition(combined.systemBatteries?.freshDevices(at: time.addingTimeInterval(12)).count == 1)
+    let legacy = "{\"version\":1,\"bytes\":\(snapshot.bytes),\"receivedAt\":\(time.timeIntervalSinceReferenceDate)}"
+    precondition(try! JSONDecoder().decode(WidgetSnapshot.self, from: Data(legacy.utf8)).systemBatteries == nil)
     print("Widget snapshot tests passed")
 }

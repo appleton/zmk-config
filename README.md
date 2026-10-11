@@ -70,7 +70,12 @@ image is needed for these ZMK builds. See [Raytac's DFU instructions](https://ww
 
 The firmware includes a separate USB HID interface for
 [ErgoDash USB Monitor](tools/ergodash-monitor/README.md), a native Notification Center
-widget with a setup app and automatic background USB collector. The Mac reads all telemetry over the dongle's USB connection;
+widget with a setup app and automatic background collector. Version 4 includes
+the Mac and battery-reporting accessories, using macOS's device discovery and
+native icon selection. New connected accessories appear automatically; there
+is no fixed device or model list. Choose **Large** for the native Batteries
+table layout, with both keyboard halves together in one extra row.
+The Mac reads keyboard telemetry over the dongle's USB connection;
 no Bluetooth pairing with the Mac is required.
 
 It shows both halves in one table row, with an SF Symbols Wi-Fi indicator to
@@ -104,7 +109,8 @@ open "tools/ergodash-monitor/build/ErgoDash USB Monitor.app"
 
 Open the app from Applications and install its background service, then add
 **ErgoDash Batteries** from **Edit Widgets** in Notification Center. The setup
-app can be closed afterward: a per-user LaunchAgent collects USB telemetry,
+app can be closed afterward: a per-user LaunchAgent collects USB telemetry and
+system accessory batteries,
 starts automatically at login after boot, and restarts if it exits. It has no
 window, Dock icon, menu bar item or separate desktop card. Native widget sizes
 and refresh timing are controlled by macOS; the medium sidebar widget's outer

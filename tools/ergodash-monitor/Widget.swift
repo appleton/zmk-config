@@ -5,11 +5,12 @@ struct BatteryEntry: TimelineEntry {
     let date: Date
     let report: BatteryReport?
     let receivedAt: Date?
+    let devices: [SystemBatteryReading]
 }
 
 struct BatteryProvider: TimelineProvider {
     func placeholder(in context: Context) -> BatteryEntry {
-        BatteryEntry(date: Date(), report: BatteryReport(BatteryReport.demoBytes), receivedAt: nil)
+        BatteryEntry(date: Date(), report: BatteryReport(BatteryReport.demoBytes), receivedAt: nil, devices: [.demo])
     }
 
     func getSnapshot(in context: Context, completion: @escaping (BatteryEntry) -> Void) {
@@ -22,24 +23,35 @@ struct BatteryProvider: TimelineProvider {
 
     private func current() -> BatteryEntry {
         let snapshot = SnapshotStore.load(forExtension: true)
-        return BatteryEntry(date: Date(), report: snapshot?.freshReport(), receivedAt: snapshot?.receivedAt)
+        return BatteryEntry(date: Date(), report: snapshot?.freshReport(), receivedAt: snapshot?.receivedAt,
+                            devices: snapshot?.systemBatteries?.freshDevices() ?? [])
     }
 }
 
 @main struct ErgoDashBatteryWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: WidgetConstants.kind, provider: BatteryProvider()) { entry in
-            BatteryWidgetView(report: entry.report, sampledAt: entry.receivedAt)
+            CombinedWidgetContent(entry: entry)
                 .environment(\.colorScheme, .dark)
                 .containerBackground(for: .widget) { Color.clear }
                 .widgetURL(URL(string: "ergodash-monitor://show"))
         }
         .configurationDisplayName("ErgoDash Batteries")
-        .description("Left and right keyboard battery levels and signal strength over USB.")
-        .supportedFamilies([.systemMedium])
+        .description("Mac and connected accessory batteries, plus both ErgoDash halves over USB.")
+        .supportedFamilies([.systemMedium, .systemLarge])
+        .contentMarginsDisabled()
         .containerBackgroundRemovable(true)
         // Match the host backdrop used by Apple's Batteries widget. A glass
         // view inside containerBackground leaves the host's opaque fill intact.
         .preferredBackgroundStyle(.blur)
+    }
+}
+
+private struct CombinedWidgetContent: View {
+    let entry: BatteryEntry
+    @Environment(\.widgetFamily) private var family
+    var body: some View {
+        CombinedBatteryWidgetView(report: entry.report, sampledAt: entry.receivedAt,
+                                  devices: entry.devices, large: family == .systemLarge)
     }
 }

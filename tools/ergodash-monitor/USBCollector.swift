@@ -11,6 +11,7 @@ final class USBCollector: NSObject, NSApplicationDelegate {
     private var timer: Timer?
     private var lastReload = Date.distantPast
     private var publishedSignature = ""
+    private var systemBatteries: SystemBatterySnapshot?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.prohibited)
@@ -93,11 +94,21 @@ final class USBCollector: NSObject, NSApplicationDelegate {
     }
 
     private func publish(forceReload: Bool = false) {
-        do { try SnapshotStore.save(snapshot ?? .disconnected) }
+        if let data = ReadSystemBatteries(),
+           let inventory = try? JSONDecoder().decode(SystemBatteryInventory.self, from: data) {
+            systemBatteries = SystemBatterySnapshot(inventory: inventory)
+        } else { systemBatteries = nil }
+        var combined = snapshot ?? .disconnected
+        combined.systemBatteries = systemBatteries
+        do { try SnapshotStore.save(combined) }
         catch { NSLog("Could not share widget readings: %@", error.localizedDescription); return }
         let report = snapshot?.freshReport()
-        let signature = report?.halves.map { "\($0.connected)-\($0.usbPowered)-\($0.current)-\($0.percent)" }
+        let keyboardSignature = report?.halves.map { "\($0.connected)-\($0.usbPowered)-\($0.current)-\($0.percent)" }
             .joined(separator: "|") ?? "offline"
+        let systemSignature = systemBatteries?.devices.map {
+            "\($0.id)-\($0.name)-\($0.percent)-\($0.charging)-\($0.lowBattery)-\($0.lowPowerMode)-\($0.glyph)"
+        }.joined(separator: "|") ?? "unavailable"
+        let signature = keyboardSignature + "|" + systemSignature
         // Request reloads on battery/power/connection changes. Steady readings
         // refresh at most every five minutes; macOS applies its own budget.
         if forceReload || signature != publishedSignature || Date().timeIntervalSince(lastReload) >= 300 {
