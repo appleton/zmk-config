@@ -9,13 +9,16 @@ struct WidgetSnapshot: Codable {
     let version: Int
     let bytes: [UInt8]
     let receivedAt: Date
+    var keyboardName: String? = nil
     var systemBatteries: SystemBatterySnapshot? = nil
 
-    init(bytes: [UInt8], receivedAt: Date = Date(), systemBatteries: SystemBatterySnapshot? = nil) {
+    init(bytes: [UInt8], receivedAt: Date = Date(), systemBatteries: SystemBatterySnapshot? = nil,
+         keyboardName: String? = nil) {
         self.version = 1
         self.bytes = bytes.count == 19 ? [1] + bytes : bytes
         self.receivedAt = receivedAt
         self.systemBatteries = systemBatteries
+        self.keyboardName = keyboardName
     }
 
     var report: BatteryReport? { version == 1 ? BatteryReport(bytes) : nil }
@@ -73,12 +76,13 @@ enum SnapshotStore {
 
 func runSnapshotTests() {
     let time = Date(timeIntervalSince1970: 1000)
-    let snapshot = WidgetSnapshot(bytes: BatteryReport.demoBytes, receivedAt: time)
+    let snapshot = WidgetSnapshot(bytes: BatteryReport.demoBytes, receivedAt: time, keyboardName: "Renamed keyboard")
     precondition(snapshot.freshReport(at: time.addingTimeInterval(5))?.halves[0].age == 17)
     precondition(snapshot.freshReport(at: time.addingTimeInterval(11)) == nil)
     precondition(snapshot.freshReport(at: time.addingTimeInterval(-6)) == nil)
     let decoded = try! JSONDecoder().decode(WidgetSnapshot.self, from: JSONEncoder().encode(snapshot))
     precondition(decoded.bytes == snapshot.bytes && decoded.receivedAt == time)
+    precondition(decoded.keyboardName == "Renamed keyboard")
     let malformed = WidgetSnapshot(bytes: [1, 2], receivedAt: time)
     precondition(malformed.report == nil && malformed.freshReport(at: time) == nil)
     precondition(WidgetSnapshot.disconnected.report?.halves[0].compact == "—")
@@ -88,6 +92,7 @@ func runSnapshotTests() {
     precondition(combined.freshReport(at: time.addingTimeInterval(12)) == nil)
     precondition(combined.systemBatteries?.freshDevices(at: time.addingTimeInterval(12)).count == 1)
     let legacy = "{\"version\":1,\"bytes\":\(snapshot.bytes),\"receivedAt\":\(time.timeIntervalSinceReferenceDate)}"
-    precondition(try! JSONDecoder().decode(WidgetSnapshot.self, from: Data(legacy.utf8)).systemBatteries == nil)
+    let oldSnapshot = try! JSONDecoder().decode(WidgetSnapshot.self, from: Data(legacy.utf8))
+    precondition(oldSnapshot.systemBatteries == nil && oldSnapshot.keyboardName == nil)
     print("Widget snapshot tests passed")
 }

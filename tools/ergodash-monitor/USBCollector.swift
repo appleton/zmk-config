@@ -7,6 +7,7 @@ final class USBCollector: NSObject, NSApplicationDelegate {
     private let manager = IOHIDManagerCreate(kCFAllocatorDefault, IOOptionBits(kIOHIDOptionsTypeNone))
     private let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: 64)
     private var device: IOHIDDevice?
+    private var keyboardName = SnapshotStore.load(forExtension: false)?.keyboardName
     private var snapshot: WidgetSnapshot?
     private var timer: Timer?
     private var lastReload = Date.distantPast
@@ -61,6 +62,9 @@ final class USBCollector: NSObject, NSApplicationDelegate {
     private func connected(_ found: IOHIDDevice) {
         guard device == nil else { return }
         device = found
+        let product = (IOHIDDeviceGetProperty(found, kIOHIDProductKey as CFString) as? String)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        keyboardName = product.flatMap { $0.isEmpty ? nil : $0 }
         IOHIDDeviceRegisterInputReportCallback(found, buffer, 64, { context, result, sender, type, id, bytes, count in
             guard let context = context, result == kIOReturnSuccess else { return }
             Unmanaged<USBCollector>.fromOpaque(context).takeUnretainedValue()
@@ -99,6 +103,7 @@ final class USBCollector: NSObject, NSApplicationDelegate {
             systemBatteries = SystemBatterySnapshot(inventory: inventory)
         } else { systemBatteries = nil }
         var combined = snapshot ?? .disconnected
+        combined.keyboardName = keyboardName
         combined.systemBatteries = systemBatteries
         do { try SnapshotStore.save(combined) }
         catch { NSLog("Could not share widget readings: %@", error.localizedDescription); return }
@@ -108,7 +113,7 @@ final class USBCollector: NSObject, NSApplicationDelegate {
         let systemSignature = systemBatteries?.devices.map {
             "\($0.id)-\($0.name)-\($0.percent)-\($0.charging)-\($0.lowBattery)-\($0.lowPowerMode)-\($0.glyph)"
         }.joined(separator: "|") ?? "unavailable"
-        let signature = keyboardSignature + "|" + systemSignature
+        let signature = (keyboardName ?? "") + "|" + keyboardSignature + "|" + systemSignature
         // Request reloads on battery/power/connection changes. Steady readings
         // refresh at most every five minutes; macOS applies its own budget.
         if forceReload || signature != publishedSignature || Date().timeIntervalSince(lastReload) >= 300 {
@@ -121,7 +126,9 @@ final class USBCollector: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         timer?.invalidate()
         // Publish offline when the collector is intentionally stopped.
-        try? SnapshotStore.save(.disconnected)
+        var offline = WidgetSnapshot.disconnected
+        offline.keyboardName = keyboardName
+        try? SnapshotStore.save(offline)
         WidgetCenter.shared.reloadTimelines(ofKind: WidgetConstants.kind)
         if let device = device { IOHIDDeviceRegisterInputReportCallback(device, buffer, 64, nil, nil) }
         IOHIDManagerUnscheduleFromRunLoop(manager, CFRunLoopGetMain(), CFRunLoopMode.defaultMode.rawValue)

@@ -9,6 +9,7 @@ struct CombinedBatteryWidgetView: View {
     let sampledAt: Date?
     let devices: [SystemBatteryReading]
     var large: Bool = true
+    var keyboardName: String? = nil
 
     var body: some View {
         GeometryReader { geometry in
@@ -20,7 +21,7 @@ struct CombinedBatteryWidgetView: View {
                         if index < devices.count {
                             deviceRow(devices[index], rowHeight: rowHeight)
                         } else if index == devices.count {
-                            BatteryWidgetView(report: report, sampledAt: sampledAt)
+                            BatteryWidgetView(report: report, sampledAt: sampledAt, keyboardName: keyboardName)
                                 .padding(.leading, 16)
                                 .padding(.trailing, 20)
                                 .scaleEffect(min(1, rowHeight / 30))

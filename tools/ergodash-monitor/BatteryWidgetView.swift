@@ -3,16 +3,18 @@ import SwiftUI
 struct BatteryWidgetView: View {
     let report: BatteryReport?
     var sampledAt: Date? = nil
+    var keyboardName: String? = nil
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 0) {
             Image(systemName: "keyboard")
                 .resizable().scaledToFit()
                 .frame(width: 20, height: 20)
                 .frame(width: 22, height: 22)
                 .foregroundStyle(.primary)
                 .accessibilityHidden(true)
-            Text("Ergodash").foregroundStyle(.primary)
+                .padding(.trailing, 12)
+            Text(keyboardName ?? "Keyboard").foregroundStyle(.primary)
             Spacer(minLength: 6)
             HStack(spacing: 10) {
                 halfCell(side: 0)

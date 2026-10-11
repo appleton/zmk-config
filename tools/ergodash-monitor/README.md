@@ -43,7 +43,10 @@ For scripted setup, the executable also accepts `--install-service` and
 The table uses the native Batteries row spacing, inset separators, white
 labels and device icons. The keyboard halves occupy one additional row.
 That row starts with a keyboard icon aligned to the device icon column and
-the label “Ergodash”. Left and right readings follow in that order, separated
+the dongle's USB product name (“Ergodash” with the renamed firmware), read from its
+HID device properties. No product name is hard-coded in the row; “Keyboard”
+is the fallback until a name is available. The last reported name is retained
+while the dongle is disconnected. Left and right readings follow in that order, separated
 by a vertical divider, using the same battery gauge as the accessory rows.
 Wi-Fi symbols are sized to the small battery indicators beside them.
 Large normally has six rows, Medium three; when more devices are connected,

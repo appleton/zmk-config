@@ -5,6 +5,7 @@ import WidgetKit
 final class SetupModel: ObservableObject {
     @Published var report: BatteryReport?
     @Published var receivedAt: Date?
+    @Published var keyboardName: String?
     @Published var devices: [SystemBatteryReading] = []
     @Published var installed = BackgroundService.installed
     @Published var message = ""
@@ -14,6 +15,7 @@ final class SetupModel: ObservableObject {
         let snapshot = SnapshotStore.load(forExtension: false)
         report = snapshot?.freshReport()
         receivedAt = snapshot?.receivedAt
+        keyboardName = snapshot?.keyboardName
         devices = snapshot?.systemBatteries?.freshDevices() ?? []
         installed = BackgroundService.installed
         if !installed { message = "Install the background service to collect readings automatically." }
@@ -44,7 +46,7 @@ struct SetupWindow: View {
             Text("ErgoDash Batteries Setup").font(.title2).fontWeight(.semibold)
             Text("Read both keyboard halves in the widgets sidebar in Notification Center.")
                 .fixedSize(horizontal: false, vertical: true)
-            BatteryWidgetView(report: model.report, sampledAt: model.receivedAt)
+            BatteryWidgetView(report: model.report, sampledAt: model.receivedAt, keyboardName: model.keyboardName)
                 .frame(height: 50)
             if !model.devices.isEmpty {
                 Text(model.devices.map { "\($0.name): \($0.percent)%\($0.charging ? " (charging)" : "")" }.joined(separator: "\n"))
@@ -118,7 +120,8 @@ final class Setup: NSObject, NSApplicationDelegate {
     let inventory = ReadSystemBatteries().flatMap { try? JSONDecoder().decode(SystemBatteryInventory.self, from: $0) }
     let renderer = ImageRenderer(content:
         CombinedBatteryWidgetView(report: BatteryReport(BatteryReport.demoBytes), sampledAt: nil,
-                                  devices: inventory?.validDevices ?? [.demo])
+                                  devices: inventory?.validDevices ?? [.demo],
+                                  keyboardName: SnapshotStore.load(forExtension: false)?.keyboardName)
             .frame(width: 344, height: 344)
             .environment(\.colorScheme, .dark)
             .background(Color.gray))

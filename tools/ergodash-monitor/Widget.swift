@@ -6,6 +6,7 @@ struct BatteryEntry: TimelineEntry {
     let report: BatteryReport?
     let receivedAt: Date?
     let devices: [SystemBatteryReading]
+    var keyboardName: String? = nil
 }
 
 struct BatteryProvider: TimelineProvider {
@@ -24,7 +25,7 @@ struct BatteryProvider: TimelineProvider {
     private func current() -> BatteryEntry {
         let snapshot = SnapshotStore.load(forExtension: true)
         return BatteryEntry(date: Date(), report: snapshot?.freshReport(), receivedAt: snapshot?.receivedAt,
-                            devices: snapshot?.systemBatteries?.freshDevices() ?? [])
+                            devices: snapshot?.systemBatteries?.freshDevices() ?? [], keyboardName: snapshot?.keyboardName)
     }
 }
 
@@ -52,6 +53,6 @@ private struct CombinedWidgetContent: View {
     @Environment(\.widgetFamily) private var family
     var body: some View {
         CombinedBatteryWidgetView(report: entry.report, sampledAt: entry.receivedAt,
-                                  devices: entry.devices, large: family == .systemLarge)
+                                  devices: entry.devices, large: family == .systemLarge, keyboardName: entry.keyboardName)
     }
 }
