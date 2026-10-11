@@ -72,7 +72,7 @@ struct CombinedBatteryWidgetView: View {
     }
 }
 
-private struct NativeBatteryGauge: View {
+struct NativeBatteryGauge: View {
     let percent: Int
     let charging: Bool
     let tint: Color

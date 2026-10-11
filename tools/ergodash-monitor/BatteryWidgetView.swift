@@ -5,10 +5,17 @@ struct BatteryWidgetView: View {
     var sampledAt: Date? = nil
 
     var body: some View {
-        HStack(spacing: 14) {
-            halfCell(side: 0)
-            Divider().frame(height: 22)
-            halfCell(side: 1)
+        HStack(spacing: 12) {
+            Image(systemName: "keyboard")
+                .resizable().scaledToFit()
+                .frame(width: 20, height: 20)
+                .frame(width: 22, height: 22)
+                .foregroundStyle(.primary)
+                .accessibilityHidden(true)
+            HStack(spacing: 14) {
+                halfCell(side: 0)
+                halfCell(side: 1)
+            }
         }
         .font(.system(size: 11))
         .lineLimit(1)
@@ -29,9 +36,9 @@ struct BatteryWidgetView: View {
             Link(destination: URL(string: "ergodash-monitor://show")!) {
                 Image(systemName: signalPercent == nil ? "wifi.slash" : "wifi",
                       variableValue: signalPercent.map { Double($0) / 100 } ?? 0)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.system(size: 10))
                     .foregroundStyle(signalPercent == nil ? .secondary : .primary)
-                    .frame(width: 17, height: 22)
+                    .frame(width: 14, height: 12)
                     .contentShape(Rectangle())
             }
                 .buttonStyle(.plain)
@@ -43,11 +50,9 @@ struct BatteryWidgetView: View {
                     .monospacedDigit()
                     .fixedSize(horizontal: true, vertical: false)
                     .foregroundStyle(batteryCurrent ? .primary : .secondary)
-                Image(systemName: reading?.batterySymbol ?? "battery.0percent")
-                    .font(.system(size: 16))
-                    .symbolRenderingMode(.palette)
-                    .foregroundStyle(batteryTint(reading), Color.primary.opacity(0.6))
-                    .frame(width: 26, height: 22)
+                NativeBatteryGauge(percent: batteryCurrent ? Int(reading!.percent) : 0,
+                    charging: batteryCurrent && reading?.usbPowered == true,
+                    tint: batteryTint(reading))
             }
                 .help((reading?.batteryTooltip ?? "Battery unavailable") + timestamp)
                 .accessibilityElement(children: .ignore)

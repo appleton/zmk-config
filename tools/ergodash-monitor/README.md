@@ -42,6 +42,9 @@ For scripted setup, the executable also accepts `--install-service` and
 
 The table uses the native Batteries row spacing, inset separators, white
 labels and device icons. The keyboard halves occupy one additional row.
+That row starts with a keyboard icon aligned to the device icon column, has
+no vertical divider, and uses the same battery gauge as the accessory rows.
+Wi-Fi symbols are sized to the small battery indicators beside them.
 Large normally has six rows, Medium three; when more devices are connected,
 rows become more compact instead of silently dropping devices.
 Each keyboard entry reads from left to right:
