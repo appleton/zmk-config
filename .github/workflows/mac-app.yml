@@ -20,7 +20,34 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  version:
+    # Drafts are visible only with push access. PR code never receives this
+    # token. Reserving the number now also protects retries after build failure.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Test release numbering and retries
+        run: node --test .github/scripts/mac-release.test.cjs
+      - name: Reserve release version
+        id: version
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const allocate = require('./.github/scripts/mac-release.cjs');
+            await allocate({ github, context, core, reserve: true });
+
   build:
+    needs: version
+    if: ${{ !cancelled() && (needs.version.result == 'success' || needs.version.result == 'skipped') }}
     runs-on: xcode-27
     timeout-minutes: 30
     env:
@@ -28,8 +55,6 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
       tag: ${{ steps.version.outputs.tag }}
-      published: ${{ steps.version.outputs.published }}
-      draft: ${{ steps.version.outputs.draft }}
     steps:
       - uses: actions/checkout@v4
       - name: Test release numbering and retries
@@ -37,10 +62,18 @@ jobs:
       - name: Choose release version
         id: version
         uses: actions/github-script@v8
+        env:
+          RESERVED_VERSION: ${{ needs.version.outputs.version }}
+          RESERVED_TAG: ${{ needs.version.outputs.tag }}
         with:
           script: |
-            const allocate = require('./.github/scripts/mac-release.cjs');
-            await allocate({ github, context, core });
+            if (process.env.RESERVED_VERSION) {
+              core.setOutput('version', process.env.RESERVED_VERSION);
+              core.setOutput('tag', process.env.RESERVED_TAG);
+            } else {
+              const allocate = require('./.github/scripts/mac-release.cjs');
+              await allocate({ github, context, core });
+            }
       - name: Build, sign and test app and widget
         env:
           APP_VERSION: ${{ steps.version.outputs.version }}.0
@@ -70,34 +103,50 @@ jobs:
 
   release:
     needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.build.outputs.published != 'true'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Recheck publication state on every attempt
+        id: publication
+        uses: actions/github-script@v8
+        env:
+          RELEASE_TAG: ${{ needs.build.outputs.tag }}
+        with:
+          script: |
+            const { checkPublication } = require('./.github/scripts/mac-release.cjs');
+            await checkPublication({ github, context, core, expectedTag: process.env.RELEASE_TAG });
       - uses: actions/download-artifact@v4
+        if: steps.publication.outputs.state != 'published'
         with:
           name: mac-app
           path: dist
       - name: Publish GitHub release
+        if: steps.publication.outputs.state != 'published'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ needs.build.outputs.tag }}
           RELEASE_VERSION: ${{ needs.build.outputs.version }}
-          RESUME_DRAFT: ${{ needs.build.outputs.draft }}
+          PUBLICATION_STATE: ${{ steps.publication.outputs.state }}
+          MAKE_LATEST: ${{ steps.publication.outputs.makeLatest }}
         run: |
           cat > release-notes.md <<'NOTES'
           Download the Apple Silicon app ZIP and unzip it. Move **ErgoDash USB Monitor.app** to **Applications**, open it, and choose **Install background service** (also when upgrading). Add **ErgoDash Batteries** from Notification Center's **Edit Widgets** gallery.
 
           The app and widget are ad-hoc signed, without Developer ID signing or notarization. SHA-256 checksums are included in `SHA256SUMS.txt`.
           NOTES
-          if [ "$RESUME_DRAFT" = true ]; then
+          if [ "$PUBLICATION_STATE" = draft ]; then
             gh release upload "$RELEASE_TAG" dist/*.zip dist/SHA256SUMS.txt --clobber
-            gh release edit "$RELEASE_TAG" --draft=false --latest
+            gh release edit "$RELEASE_TAG" --draft=false --latest="$MAKE_LATEST" \
+              --title "ErgoDash USB Monitor $RELEASE_VERSION" --notes-file release-notes.md
           else
             gh release create "$RELEASE_TAG" dist/*.zip dist/SHA256SUMS.txt \
               --target "$GITHUB_SHA" --title "ErgoDash USB Monitor $RELEASE_VERSION" \
-              --notes-file release-notes.md --latest
+              --notes-file release-notes.md --latest="$MAKE_LATEST"
           fi

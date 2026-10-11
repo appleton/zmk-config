@@ -13,8 +13,11 @@ sh tools/ergodash-monitor/build.sh
 GitHub Actions builds and tests the app on app-related pull requests. Every push
 to `main` also publishes an Apple Silicon app ZIP and SHA-256 checksums on
 [GitHub Releases](https://github.com/appleton/zmk-config/releases), numbered
-`v1`, `v2`, `v3`, and so on. Releases are serialized and retries reuse the same
-commit's version, including recovery of an interrupted draft release. The app
+`v1`, `v2`, `v3`, and so on. Releases are serialized and each number is reserved
+as a draft before building. Retries reuse the same commit's version, recheck
+publication state, and recover interrupted drafts without replacing a newer
+release as Latest. Only main-branch allocation and publishing have write access;
+pull request builds are read-only and cannot reserve or publish releases. The app
 and extension both use that major version (`1.0`, `2.0`, etc.). The CI build
 uses Xcode 27 on macOS 27 to match the private APIs verified here.
 

@@ -37,15 +37,50 @@ function planRelease(tags, releases, sha) {
   };
 }
 
-module.exports = async function allocate({ github, context, core }) {
+async function inventory(github, context) {
   const options = { ...context.repo, per_page: 100 };
-  const [tags, releases] = await Promise.all([
+  return Promise.all([
     github.paginate(github.rest.repos.listTags, options),
     github.paginate(github.rest.repos.listReleases, options),
   ]);
+}
+
+module.exports = async function allocate({ github, context, core, reserve = false }) {
+  const [tags, releases] = await inventory(github, context);
   const plan = planRelease(tags, releases, context.sha);
+  // Reserve before building: a failed build/publish must not let a later commit
+  // consume this version. This option is only used by the main-only write job.
+  if (reserve && !plan.published && !plan.draft) {
+    await github.rest.repos.createRelease({
+      ...context.repo, tag_name: plan.tag, target_commitish: context.sha,
+      name: `ErgoDash USB Monitor ${plan.version}`, draft: true,
+    });
+    plan.draft = true;
+  }
   for (const [key, value] of Object.entries(plan)) core.setOutput(key, String(value));
   core.info(`Mac app ${plan.tag}: ${plan.published ? 'already published' : plan.draft ? 'resume draft' : 'new release'}`);
   return plan;
 };
 module.exports.planRelease = planRelease;
+
+function publicationPlan(tags, releases, sha, expectedTag) {
+  const version = majorVersion(expectedTag);
+  if (version === null) throw new Error(`Invalid expected release tag: ${expectedTag}`);
+  const tag = tags.find(tag => tag.name === expectedTag);
+  const release = releases.find(release => release.tag_name === expectedTag);
+  const target = tag?.commit.sha || release?.target_commitish;
+  if (!target) throw new Error(`Reserved release ${expectedTag} is missing`);
+  if (target !== sha) throw new Error(`Release ${expectedTag} belongs to a different commit`);
+  return {
+    state: release ? (release.draft ? 'draft' : 'published') : 'new',
+    makeLatest: !releases.some(release => !release.draft && majorVersion(release.tag_name) > version),
+  };
+}
+
+module.exports.publicationPlan = publicationPlan;
+module.exports.checkPublication = async function ({ github, context, core, expectedTag }) {
+  const [tags, releases] = await inventory(github, context);
+  const plan = publicationPlan(tags, releases, context.sha, expectedTag);
+  for (const [key, value] of Object.entries(plan)) core.setOutput(key, String(value));
+  core.info(`${expectedTag}: ${plan.state}, latest=${plan.makeLatest}`);
+};
