@@ -12,10 +12,14 @@ struct BatteryWidgetView: View {
                 .frame(width: 22, height: 22)
                 .foregroundStyle(.primary)
                 .accessibilityHidden(true)
-            HStack(spacing: 14) {
+            Text("Ergodash").foregroundStyle(.primary)
+            Spacer(minLength: 6)
+            HStack(spacing: 10) {
                 halfCell(side: 0)
+                Divider().frame(height: 22)
                 halfCell(side: 1)
             }
+            .fixedSize(horizontal: true, vertical: false)
         }
         .font(.system(size: 11))
         .lineLimit(1)
@@ -29,8 +33,6 @@ struct BatteryWidgetView: View {
         let signalPercent = reading?.signalPercent
         let timestamp = sampledAt.map { " · Updated \($0.formatted(date: .omitted, time: .standard))" } ?? ""
         HStack(spacing: 5) {
-            Text(name).foregroundStyle(.primary)
-            Spacer(minLength: 0)
             // Give the signal its own widget interaction region. Keep help on
             // the Link itself, rather than only its archived image label.
             Link(destination: URL(string: "ergodash-monitor://show")!) {
@@ -59,8 +61,8 @@ struct BatteryWidgetView: View {
                 .accessibilityLabel("\(name) battery")
                 .accessibilityValue(reading?.batteryTooltip ?? "Unavailable")
         }
-        .frame(maxWidth: .infinity)
         .accessibilityElement(children: .contain)
+        .accessibilityLabel("\(name) keyboard half")
     }
 
     private func batteryTint(_ reading: HalfReading?) -> Color {
