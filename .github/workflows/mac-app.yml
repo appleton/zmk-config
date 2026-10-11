@@ -1,0 +1,103 @@
+name: Build and release Mac app
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - 'tools/ergodash-monitor/**'
+      - '.github/workflows/mac-app.yml'
+      - '.github/scripts/mac-release*'
+
+permissions:
+  contents: read
+
+# Keep every main push queued: version allocation and publication must finish
+# together before the next release starts. PR builds have separate queues.
+concurrency:
+  group: mac-app-${{ github.event_name == 'push' && 'release' || github.ref }}
+  queue: max
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: xcode-27
+    timeout-minutes: 30
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_27.0.0.app/Contents/Developer
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+      published: ${{ steps.version.outputs.published }}
+      draft: ${{ steps.version.outputs.draft }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test release numbering and retries
+        run: node --test .github/scripts/mac-release.test.cjs
+      - name: Choose release version
+        id: version
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const allocate = require('./.github/scripts/mac-release.cjs');
+            await allocate({ github, context, core });
+      - name: Build, sign and test app and widget
+        env:
+          APP_VERSION: ${{ steps.version.outputs.version }}.0
+          APP_BUILD_VERSION: ${{ steps.version.outputs.version }}
+        run: sh tools/ergodash-monitor/build.sh
+      - name: Test native accessory discovery
+        run: |
+          clang -fobjc-arc -Wall -Wextra -Werror -framework Foundation -framework AppKit -framework IOKit \
+            tools/ergodash-monitor/tests/SystemBatteriesTests.m -o /tmp/ergodash-native-battery-test
+          /tmp/ergodash-native-battery-test
+      - name: Package Apple Silicon app
+        env:
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          mkdir -p dist
+          ditto -c -k --sequesterRsrc --keepParent \
+            'tools/ergodash-monitor/build/ErgoDash USB Monitor.app' \
+            "dist/ErgoDash-USB-Monitor-${RELEASE_TAG}-arm64.zip"
+          cd dist
+          shasum -a 256 *.zip > SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mac-app
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 14
+
+  release:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.build.outputs.published != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: mac-app
+          path: dist
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.build.outputs.tag }}
+          RELEASE_VERSION: ${{ needs.build.outputs.version }}
+          RESUME_DRAFT: ${{ needs.build.outputs.draft }}
+        run: |
+          cat > release-notes.md <<'NOTES'
+          Download the Apple Silicon app ZIP and unzip it. Move **ErgoDash USB Monitor.app** to **Applications**, open it, and choose **Install background service** (also when upgrading). Add **ErgoDash Batteries** from Notification Center's **Edit Widgets** gallery.
+
+          The app and widget are ad-hoc signed, without Developer ID signing or notarization. SHA-256 checksums are included in `SHA256SUMS.txt`.
+          NOTES
+          if [ "$RESUME_DRAFT" = true ]; then
+            gh release upload "$RELEASE_TAG" dist/*.zip dist/SHA256SUMS.txt --clobber
+            gh release edit "$RELEASE_TAG" --draft=false --latest
+          else
+            gh release create "$RELEASE_TAG" dist/*.zip dist/SHA256SUMS.txt \
+              --target "$GITHUB_SHA" --title "ErgoDash USB Monitor $RELEASE_VERSION" \
+              --notes-file release-notes.md --latest
+          fi

@@ -10,6 +10,18 @@ Build with Apple's developer tools on macOS 14+:
 sh tools/ergodash-monitor/build.sh
 ```
 
+GitHub Actions builds and tests the app on app-related pull requests. Every push
+to `main` also publishes an Apple Silicon app ZIP and SHA-256 checksums on
+[GitHub Releases](https://github.com/appleton/zmk-config/releases), numbered
+`v1`, `v2`, `v3`, and so on. Releases are serialized and retries reuse the same
+commit's version, including recovery of an interrupted draft release. The app
+and extension both use that major version (`1.0`, `2.0`, etc.). The CI build
+uses Xcode 27 on macOS 27 to match the private APIs verified here.
+
+Release ZIPs preserve the nested ad-hoc signatures; Developer ID signing and
+notarization are not configured. Local builds retain their default version;
+`APP_VERSION` and `APP_BUILD_VERSION` can override it for a release build.
+
 For the native discovery integration test, run outside a development sandbox:
 
 ```sh
