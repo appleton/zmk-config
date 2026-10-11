@@ -23,12 +23,18 @@ struct BatteryWidgetView: View {
         HStack(spacing: 5) {
             Text(name).fontWeight(.medium).foregroundStyle(.primary)
             Spacer(minLength: 0)
-            Image(systemName: signalPercent == nil ? "wifi.slash" : "wifi",
-                  variableValue: signalPercent.map { Double($0) / 100 } ?? 0)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(signalPercent == nil ? .secondary : .primary)
-                .frame(width: 17, height: 22)
-                .help((reading?.signalTooltip ?? "Signal unavailable") + timestamp)
+            // Give the signal its own widget interaction region. Keep help on
+            // the Link itself, rather than only its archived image label.
+            Link(destination: URL(string: "ergodash-monitor://show")!) {
+                Image(systemName: signalPercent == nil ? "wifi.slash" : "wifi",
+                      variableValue: signalPercent.map { Double($0) / 100 } ?? 0)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(signalPercent == nil ? .secondary : .primary)
+                    .frame(width: 17, height: 22)
+                    .contentShape(Rectangle())
+            }
+                .buttonStyle(.plain)
+                .help("\(name) · " + (reading?.signalTooltip ?? "Signal unavailable"))
                 .accessibilityLabel("\(name) signal")
                 .accessibilityValue(reading?.signalTooltip ?? "Unavailable")
             HStack(spacing: 3) {

@@ -43,12 +43,16 @@ preference and generated a fresh widget timeline.
 Native sidebar widget dimensions are fixed by WidgetKit; a medium widget's
 outer height cannot be halved. The row stays vertically centered.
 
-Signal help shows an estimated percentage and measured RSSI in dBm, plus the
-snapshot time. The estimate is `clamp(2 × (RSSI + 100), 0, 100)`; -100 dBm
+Signal help contains an estimated percentage and measured RSSI in dBm.
+The estimate is `clamp(2 × (RSSI + 100), 0, 100)`; -100 dBm
 maps to 0%, -50 dBm to 100%. It does not measure packet loss, interference,
 latency or radio transmit power. Battery help includes voltage and USB power.
-The help text is archived for accessibility. Notification Center has not shown
-hover tooltips in this build; these are no longer promised in the setup UI.
+The help text is archived for accessibility. Build 8 also makes each signal
+icon a plain Link with help on the interactive element, to test whether the
+Notification Center host supplies a tooltip tracking region. This build has
+compiled, passed decoder/snapshot tests and had its native timeline accepted;
+visible hover behavior remains unverified because computer use could not
+access the sidebar. Clicking a signal still opens the setup app.
 
 The battery bolt means **USB power detected on that half**. nice!nano v2 does
 not expose the charger's status to the MCU, so active charging or charge
@@ -83,7 +87,7 @@ The collector writes a fresh snapshot every five seconds and requests widget
 reloads on battery/power/connection changes or every five minutes otherwise.
 WidgetKit controls refresh timing and may throttle/coalesce requests: sidebar
 readings are snapshots, not a live view. **Refresh widget** in setup requests a
-new timeline. Signal help includes the displayed snapshot's timestamp.
+new timeline. Battery help includes the displayed snapshot's timestamp.
 
 The sandboxed extension reads a JSON file in its own Application Support
 folder. The nonsandboxed collector writes only this telemetry file into
