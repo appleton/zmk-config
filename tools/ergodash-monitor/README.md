@@ -116,12 +116,9 @@ Signal help contains an estimated percentage and measured RSSI in dBm.
 The estimate is `clamp(2 × (RSSI + 100), 0, 100)`; -100 dBm
 maps to 0%, -50 dBm to 100%. It does not measure packet loss, interference,
 latency or radio transmit power. Battery help includes voltage and USB power.
-The help text is archived for accessibility. Build 8 also makes each signal
-icon a plain Link with help on the interactive element, to test whether the
-Notification Center host supplies a tooltip tracking region. This build has
-compiled, passed decoder/snapshot tests and had its native timeline accepted;
-visible hover behavior remains unverified because computer use could not
-access the sidebar. Clicking a signal still opens the setup app.
+The help text is archived for accessibility. Each signal icon is a plain Link
+with help on the interactive element; visible hover tooltip behavior in the
+Notification Center host remains unverified. Clicking a signal opens setup.
 
 The battery bolt means **USB power detected on that half**. nice!nano v2 does
 not expose the charger's status to the MCU, so active charging or charge
@@ -138,6 +135,10 @@ built into the halves. If already using the earlier monitor firmware,
 values: the voltage-divider driver requires `SENSOR_CHAN_GAUGE_VOLTAGE`, while
 the old code used an unsupported generic voltage channel. The existing dongle
 monitor firmware remains compatible. No settings reset is needed.
+
+Firmware `ac4db82` renames the dongle's USB product to “Ergodash”. For this name
+change alone, reflash only the normal dongle HEX; the halves and stored bonds
+do not need updating. The widget reads the USB product name on reconnect.
 
 Allow about 40 seconds for battery readings after flashing. Battery voltage
 is sampled every 30 seconds, including while idle and USB powered. Telemetry
@@ -183,8 +184,11 @@ register the updated installed extension, and reinstall the background service.
 The installed widget has been verified to generate a new native timeline, and
 the LaunchAgent to publish real USB telemetry and restart after termination.
 Actual battery values still require the corrected firmware on both halves.
-The final on-screen background comparison still needs verification; the host
-blur preference and refreshed timeline have been confirmed in macOS logs.
+The installed widget was compared beside Apple's Batteries widget and the
+user confirmed its final appearance. Charging and ordinary battery bounds
+were also measured in offscreen normal, charging and crowded layouts; the
+right edges match, and ordinary keyboard/accessory gauges at the same level
+render identically.
 
 Hardware checks after flashing: confirm separate percentages/voltage, connect
 USB power to just one half and check its bolt, check updates while idle, move
