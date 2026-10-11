@@ -4,13 +4,14 @@ struct BatteryWidgetView: View {
     let report: BatteryReport?
     var sampledAt: Date? = nil
     var keyboardName: String? = nil
+    var rowHeight: CGFloat = 57
 
     var body: some View {
         HStack(spacing: 0) {
             Image(systemName: "keyboard")
                 .resizable().scaledToFit()
-                .frame(width: 20, height: 20)
-                .frame(width: 22, height: 22)
+                .frame(width: 20, height: min(20, rowHeight))
+                .frame(width: 22, height: min(22, rowHeight))
                 .foregroundStyle(.primary)
                 .accessibilityHidden(true)
                 .padding(.trailing, 12)
@@ -21,14 +22,14 @@ struct BatteryWidgetView: View {
                 // Match the table separators without the system Divider's
                 // appearance-dependent color in the widget host.
                 Rectangle().fill(Color.white.opacity(0.22))
-                    .frame(width: 0.5, height: 22)
+                    .frame(width: 0.5, height: min(22, rowHeight))
                     .allowsHitTesting(false)
                     .accessibilityHidden(true)
                 halfCell(side: 1)
             }
             .fixedSize(horizontal: true, vertical: false)
         }
-        .font(.system(size: 11))
+        .font(.system(size: min(11, rowHeight * 0.45)))
         .lineLimit(1)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

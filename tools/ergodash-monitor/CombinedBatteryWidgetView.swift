@@ -21,10 +21,10 @@ struct CombinedBatteryWidgetView: View {
                         if index < devices.count {
                             deviceRow(devices[index], rowHeight: rowHeight)
                         } else if index == devices.count {
-                            BatteryWidgetView(report: report, sampledAt: sampledAt, keyboardName: keyboardName)
+                            BatteryWidgetView(report: report, sampledAt: sampledAt,
+                                              keyboardName: keyboardName, rowHeight: rowHeight)
                                 .padding(.leading, 16)
                                 .padding(.trailing, 20)
-                                .scaleEffect(min(1, rowHeight / 30))
                         }
                     }
                     .frame(height: rowHeight)
@@ -80,9 +80,14 @@ struct NativeBatteryGauge: View {
     var body: some View {
         if charging {
             Image(systemName: "battery.100percent.bolt")
-                .font(.system(size: 14)).symbolRenderingMode(.palette)
+                .resizable()
+                .symbolRenderingMode(.palette)
                 .foregroundStyle(tint, Color.white.opacity(0.65))
-                .frame(width: 22, height: 12)
+                // SF battery glyphs include alignment bearings. Normalize
+                // their visible outline to the same 21×9 pt battery below.
+                .frame(width: 21, height: 12)
+                .offset(x: 2)
+                .frame(width: 22, height: 12, alignment: .leading)
         } else {
             // Native list batteries show a continuous level, not 25% steps.
             ZStack(alignment: .leading) {

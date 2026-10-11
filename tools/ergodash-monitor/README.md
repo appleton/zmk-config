@@ -49,6 +49,10 @@ is the fallback until a name is available. The last reported name is retained
 while the dongle is disconnected. Left and right readings follow in that order, separated
 by a vertical divider, using the same battery gauge as the accessory rows.
 Wi-Fi symbols are sized to the small battery indicators beside them.
+All rows use one battery renderer. Charging symbols have their visible bounds
+normalized to the same 21×9 point outline and common trailing inset as ordinary
+gauges. Crowded keyboard rows adjust text and device-icon height without scaling
+the whole row horizontally, keeping the right-hand battery aligned.
 Large normally has six rows, Medium three; when more devices are connected,
 rows become more compact instead of silently dropping devices.
 Each keyboard entry reads from left to right:
