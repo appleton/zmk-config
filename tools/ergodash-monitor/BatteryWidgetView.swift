@@ -16,7 +16,12 @@ struct BatteryWidgetView: View {
             Spacer(minLength: 6)
             HStack(spacing: 10) {
                 halfCell(side: 0)
-                Divider().frame(height: 22)
+                // Match the table separators without the system Divider's
+                // appearance-dependent color in the widget host.
+                Rectangle().fill(Color.white.opacity(0.22))
+                    .frame(width: 0.5, height: 22)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
                 halfCell(side: 1)
             }
             .fixedSize(horizontal: true, vertical: false)
