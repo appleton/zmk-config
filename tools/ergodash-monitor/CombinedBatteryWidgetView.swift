@@ -21,7 +21,8 @@ struct CombinedBatteryWidgetView: View {
                             deviceRow(devices[index], rowHeight: rowHeight)
                         } else if index == devices.count {
                             BatteryWidgetView(report: report, sampledAt: sampledAt)
-                                .padding(.horizontal, 16)
+                                .padding(.leading, 16)
+                                .padding(.trailing, 20)
                                 .scaleEffect(min(1, rowHeight / 30))
                         }
                     }
@@ -40,20 +41,21 @@ struct CombinedBatteryWidgetView: View {
     private func deviceRow(_ device: SystemBatteryReading, rowHeight: CGFloat) -> some View {
         HStack(spacing: 12) {
             glyph(device)
-                .font(.system(size: min(16, rowHeight * 0.6)))
-                .frame(width: 22, height: min(24, rowHeight))
+                .frame(width: 20, height: min(20, rowHeight))
+                .frame(width: 22, height: min(22, rowHeight))
                 .accessibilityHidden(true)
-            Text(device.name).fontWeight(.semibold).lineLimit(1)
+            Text(device.name).lineLimit(1)
             Spacer(minLength: 6)
             HStack(spacing: 8) {
-                Text("\(device.percent)%").monospacedDigit()
+                Text("\(device.percent)%")
                 NativeBatteryGauge(percent: device.percent, charging: device.charging,
                     tint: device.lowPowerMode ? .yellow : device.lowBattery && !device.charging ? .red : .green)
             }
         }
         .font(.system(size: min(11, rowHeight * 0.45)))
         .foregroundStyle(.white)
-        .padding(.horizontal, 16)
+        .padding(.leading, 16)
+        .padding(.trailing, 20)
         .help(device.help)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(device.help)
@@ -65,7 +67,7 @@ struct CombinedBatteryWidgetView: View {
         } else {
             // Apple's table uses internal symbols too (not all are accepted
             // by the public systemName initializer). Preserve those glyphs.
-            Image(_internalSystemName: device.glyph)
+            Image(_internalSystemName: device.glyph).resizable().scaledToFit()
         }
     }
 }

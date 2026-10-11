@@ -93,10 +93,11 @@ framework. These private functions can change after a macOS update. If their
 interfaces become unavailable, the collector falls back to actual OS battery
 data with generic icons; exact icon matching then needs an adapter update.
 
-The combined table has been rendered for layout checks and its installed
-timeline accepted by WidgetKit. Computer use could not access Notification
-Center for the final on-screen glass comparison or switch its existing Medium
-instance to Large. The Apple widget has not been removed.
+The installed table has been compared beside Apple's Batteries widget in
+Notification Center. Its existing instance was switched from Medium to Large
+to match Apple's outer size and row spacing. Build 10 aligns label weight,
+device icon bounds, battery inset and keyboard percentage spacing with that
+comparison. The Apple widget has not been removed.
 
 ## Keyboard readings
 

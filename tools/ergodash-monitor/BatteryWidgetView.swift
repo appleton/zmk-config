@@ -11,6 +11,7 @@ struct BatteryWidgetView: View {
             halfCell(side: 1)
         }
         .font(.system(size: 11))
+        .lineLimit(1)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
@@ -21,7 +22,7 @@ struct BatteryWidgetView: View {
         let signalPercent = reading?.signalPercent
         let timestamp = sampledAt.map { " · Updated \($0.formatted(date: .omitted, time: .standard))" } ?? ""
         HStack(spacing: 5) {
-            Text(name).fontWeight(.medium).foregroundStyle(.primary)
+            Text(name).foregroundStyle(.primary)
             Spacer(minLength: 0)
             // Give the signal its own widget interaction region. Keep help on
             // the Link itself, rather than only its archived image label.
@@ -37,9 +38,10 @@ struct BatteryWidgetView: View {
                 .help("\(name) · " + (reading?.signalTooltip ?? "Signal unavailable"))
                 .accessibilityLabel("\(name) signal")
                 .accessibilityValue(reading?.signalTooltip ?? "Unavailable")
-            HStack(spacing: 3) {
+            HStack(spacing: 6) {
                 Text(batteryCurrent ? "\(reading!.percent)%" : "—")
                     .monospacedDigit()
+                    .fixedSize(horizontal: true, vertical: false)
                     .foregroundStyle(batteryCurrent ? .primary : .secondary)
                 Image(systemName: reading?.batterySymbol ?? "battery.0percent")
                     .font(.system(size: 16))
