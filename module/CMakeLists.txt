@@ -1,0 +1,7 @@
+if(CONFIG_ERGODASH_BATTERY_TELEMETRY)
+  if(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
+    target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/central.c)
+  else()
+    target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/peripheral.c)
+  endif()
+endif()

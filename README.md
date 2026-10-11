@@ -66,6 +66,57 @@ sequence, clear the previous file from Programmer, and write only
 `ergodash-dongle-raytac-mdbt50q-cx.hex`. No separate SoftDevice or bootloader
 image is needed for these ZMK builds. See [Raytac's DFU instructions](https://www.raytac.com/news/ins.php?index_id=175).
 
+### USB battery and signal monitor
+
+The firmware includes a separate USB HID interface for
+[ErgoDash USB Monitor](tools/ergodash-monitor/README.md), a native Notification Center
+widget with a setup app and automatic background collector. Version 4 includes
+the Mac and battery-reporting accessories, using macOS's device discovery and
+native icon selection. New connected accessories appear automatically; there
+is no fixed device or model list. Choose **Large** for the native Batteries
+table layout, with both keyboard halves together in one extra row.
+The Mac reads keyboard telemetry over the dongle's USB connection;
+no Bluetooth pairing with the Mac is required.
+
+It shows both halves in one table row, with an SF Symbols Wi-Fi indicator to
+the left of the battery percentage, followed by the battery icon.
+Signal help text includes an estimated percentage
+and measured RSSI in dBm; battery help text includes voltage and USB power status.
+Percentages continue
+updating while idle and charging. Left/right identities are set in `build.yaml`,
+so they do not depend on pairing order. Both halves and the dongle must run
+the matching monitor firmware. Flash the three **normal** firmware files;
+settings-reset firmware is not needed for this update.
+
+The earlier USB monitor firmware used an unsupported sensor channel and showed
+no battery values despite working RSSI. Firmware `ded62ca` fixes this: existing
+monitor users need to reflash **only both halves**, with no dongle update or
+settings reset.
+
+The nice!nano v2 charger's status output is connected to its charge LED, not
+to the processor. The app therefore says **USB powered**, rather than claiming
+that the battery is charging or full. The charge LED indicates actual charging.
+Battery percentages are voltage-based estimates and can read high during
+charging; a 100% estimate does not establish that charging has finished.
+See the [nice!nano schematic](https://nicekeyboards.com/docs/nice-nano/pinout-schematic/).
+
+Build and run the app:
+
+```sh
+sh tools/ergodash-monitor/build.sh
+open "tools/ergodash-monitor/build/ErgoDash USB Monitor.app"
+```
+
+Open the app from Applications and install its background service, then add
+**ErgoDash Batteries** from **Edit Widgets** in Notification Center. The setup
+app can be closed afterward: a per-user LaunchAgent collects USB telemetry and
+system accessory batteries,
+starts automatically at login after boot, and restarts if it exits. It has no
+window, Dock icon, menu bar item or separate desktop card. Native widget sizes
+and refresh timing are controlled by macOS; the medium sidebar widget's outer
+height cannot be halved. Its background requests the same host blur style as Apple's Batteries widget
+using an internal WidgetKit API; see the monitor README for compatibility details.
+
 ### Restore the original two-part setup
 
 The previous +8 dBm configuration remains on branch `aa/bluetooth-tx-power`,
