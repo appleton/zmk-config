@@ -13,14 +13,15 @@ struct CombinedBatteryWidgetView: View {
 
     var body: some View {
         GeometryReader { geometry in
-            let slots = max(large ? 6 : 3, devices.count + 1)
+            let showKeyboard = report?.halves.contains(where: { $0.connected }) == true
+            let slots = max(large ? 6 : 3, devices.count + (showKeyboard ? 1 : 0))
             let rowHeight = geometry.size.height / Double(slots)
             VStack(spacing: 0) {
                 ForEach(0..<slots, id: \.self) { index in
                     ZStack {
                         if index < devices.count {
                             deviceRow(devices[index], rowHeight: rowHeight)
-                        } else if index == devices.count {
+                        } else if showKeyboard && index == devices.count {
                             BatteryWidgetView(report: report, sampledAt: sampledAt,
                                               keyboardName: keyboardName, rowHeight: rowHeight)
                                 .padding(.leading, 16)
