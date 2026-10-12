@@ -56,7 +56,9 @@ For scripted setup, the executable also accepts `--install-service` and
 `--uninstall-service`. Collector errors go to `~/Library/Logs/ErgoDashUSB/collector.log`.
 
 The table uses the native Batteries row spacing, inset separators, white
-labels and device icons. The keyboard halves occupy one additional row.
+labels and device icons. The keyboard halves occupy one additional row only
+while at least one half is connected. Disconnecting the dongle or both halves
+removes that row; Mac and accessory batteries remain visible.
 That row starts with a keyboard icon aligned to the device icon column and
 the dongle's USB product name (“Ergodash” with the renamed firmware), read from its
 HID device properties. No product name is hard-coded in the row; “Keyboard”
